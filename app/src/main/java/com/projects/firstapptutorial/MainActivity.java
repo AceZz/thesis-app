@@ -88,22 +88,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         if (timeToAnalyse) {
             try {
+                // TODO: Apply butterworth filter
+
+                
                 // compute magnitudes from cache to find a window on which to center
                 float[] magnArray = new float[CACHE_TIMESTAMPS];
                 for (int i = 0; i < CACHE_TIMESTAMPS; i++) {
                     magnArray[i] = (float) (Math.pow(accelArray[i][0],2) + (Math.pow(accelArray[i][1],2)) + (Math.pow(accelArray[i][2],2)));
                 }
                 int indexMagnMax = Utils.argMax(magnArray, HALF_WINDOW, CACHE_TIMESTAMPS-HALF_WINDOW-1);
-                textDetect.setText(String.valueOf(indexMagnMax));
 
                 // fill a flatten array with the data for analysis
                 float[] flattenArray = new float[ANALYSIS_TIMESTAMPS * 3];
 
-//                for (int i = indexMagnMax - HALF_WINDOW; i < indexMagnMax + HALF_WINDOW + 1; i++) {
-//                    for (int j = 0; j < 3; j++) {
-//                        flattenArray[j * ANALYSIS_TIMESTAMPS + (i - indexMagnMax - HALF_WINDOW)] = accelArray[i][j];
-//                    }
-//                }
+                for (int i = indexMagnMax - HALF_WINDOW; i < indexMagnMax + HALF_WINDOW + 1; i++) {
+                    for (int j = 0; j < 3; j++) {
+                        flattenArray[j * ANALYSIS_TIMESTAMPS + (i - (indexMagnMax - HALF_WINDOW))] = accelArray[i][j];
+                    }
+                }
 
                 int[] shape = new int[]{1, 151, 3};
 
@@ -119,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 // Releases model resources if no longer used.
                 model.close();
 
-//                textDetect.setText(outputFeature0.getFloatArray()[0] + "\n" + outputFeature0.getFloatArray()[1]);
+                textDetect.setText(outputFeature0.getFloatArray()[0] + "\n" + outputFeature0.getFloatArray()[1]);
             } catch (IOException e) {
                 // TODO Handle the exception
             }

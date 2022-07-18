@@ -10,7 +10,7 @@
         android:id="@+id/text_accelerometer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Pika Pika!"
+        android:text="Fall Detection App"
         android:textSize="30dp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -28,7 +28,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/pika" />
+        app:srcCompat="@drawable/walking" />
 
     <Button
         android:id="@+id/button"

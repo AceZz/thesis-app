@@ -1,6 +1,7 @@
 package com.projects.firstapptutorial;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.res.TypedArrayUtils;
 
 import android.graphics.Bitmap;
 import android.hardware.Sensor;
@@ -8,6 +9,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -21,10 +23,12 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
 import com.projects.firstapptutorial.Utils;
+import com.github.psambit9791.jdsp.filter.Butterworth;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -88,8 +92,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         if (timeToAnalyse) {
             try {
-                // TODO: Apply butterworth filter
-
                 
                 // compute magnitudes from cache to find a window on which to center
                 float[] magnArray = new float[CACHE_TIMESTAMPS];
@@ -107,8 +109,42 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     }
                 }
 
-                int[] shape = new int[]{1, 151, 3};
+                //TODO: filter signal before and on more timestamps because filter doesn't work for the first timestamps
 
+                // filter signal in the flatten array (3 times, one for each axis)
+                double[] flattenArrayX = Utils.toDoubleArray(Arrays.copyOfRange(flattenArray,
+                        0, ANALYSIS_TIMESTAMPS));
+                double[] flattenArrayY = Utils.toDoubleArray(Arrays.copyOfRange(flattenArray,
+                        ANALYSIS_TIMESTAMPS, 2*ANALYSIS_TIMESTAMPS));
+                double[] flattenArrayZ = Utils.toDoubleArray(Arrays.copyOfRange(flattenArray,
+                        2*ANALYSIS_TIMESTAMPS, 3*ANALYSIS_TIMESTAMPS));
+
+                int Fs = 50; //Sampling Frequency in Hz
+                int order = 3; //order of the filter
+                double cutOff = 0.3; //Cut-off Frequency
+                Butterworth fltX = new Butterworth(flattenArrayX, Fs); //signal is of type double[]
+                double[] resultX = fltX.lowPassFilter(order, cutOff); //get the result after filtering
+                Butterworth fltY = new Butterworth(flattenArrayY, Fs); //signal is of type double[]
+                double[] resultY = fltY.lowPassFilter(order, cutOff); //get the result after filtering
+                Butterworth fltZ = new Butterworth(flattenArrayZ, Fs); //signal is of type double[]
+                double[] resultZ = fltZ.lowPassFilter(order, cutOff); //get the result after filtering
+
+                // DEBUG
+                Log.d("resultY", Arrays.toString(resultY));
+
+                flattenArrayX = Utils.subtractArray(flattenArrayX, resultX);
+                flattenArrayY = Utils.subtractArray(flattenArrayY, resultY);
+                flattenArrayZ = Utils.subtractArray(flattenArrayZ, resultZ);
+
+                double[] filteredFlattenArray;
+                filteredFlattenArray = Utils.concatenate(flattenArrayX, flattenArrayY);
+                filteredFlattenArray = Utils.concatenate(filteredFlattenArray, flattenArrayZ);
+                flattenArray = Utils.toFloatArray(filteredFlattenArray);
+
+                //DEBUG
+                Log.d("Acceleration", Arrays.toString(flattenArrayY));
+
+                int[] shape = new int[]{1, 151, 3};
                 Model model = Model.newInstance(getApplicationContext());
                 // Creates inputs for reference.
                 TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(shape, DataType.FLOAT32);

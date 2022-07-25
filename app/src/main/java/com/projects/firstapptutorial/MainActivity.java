@@ -1,7 +1,6 @@
 package com.projects.firstapptutorial;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.res.TypedArrayUtils;
 
 import android.graphics.Bitmap;
 import android.hardware.Sensor;
@@ -13,21 +12,15 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.projects.firstapptutorial.ml.Model;
 
 import org.tensorflow.lite.DataType;
-import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Stream;
 
-import com.projects.firstapptutorial.Utils;
 import com.github.psambit9791.jdsp.filter.Butterworth;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
@@ -42,9 +35,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     int currTimestamp = 0;
     final int ANALYSIS_TIMESTAMPS = 151;
     final int HALF_WINDOW = 75;
-    final int CACHE_TIMESTAMPS = 300;
+    final int CACHE_TIMESTAMPS = 8*HALF_WINDOW;
+    final int FILTER_BUFFER_SIZE = 4*HALF_WINDOW;
+
     boolean timeToAnalyse = false;
-    float[][] accelArray = new float[CACHE_TIMESTAMPS][3];
+    float[][] cacheAccel = new float[CACHE_TIMESTAMPS][3];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,44 +75,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
         //here the event.values will provide the data
         //index 0 for x axis, 1 for y axis, 2 for z axis
-        textView.setText(accelArray[0][0]+"\n"+accelArray[0][1]+"\n"+accelArray[0][2]);
+        textView.setText(cacheAccel[0][0]+"\n"+ cacheAccel[0][1]+"\n"+ cacheAccel[0][2]);
         for (int j=0; j<3; j++) {
-            accelArray[currTimestamp][j] = event.values[j];
+            cacheAccel[currTimestamp][j] = event.values[j];
         }
         currTimestamp++;
         if (currTimestamp == CACHE_TIMESTAMPS) {
             timeToAnalyse = true;
-            currTimestamp = 0;
+            currTimestamp = 7*HALF_WINDOW; // leave one half-window size to refill
         }
 
         if (timeToAnalyse) {
             try {
-                
-                // compute magnitudes from cache to find a window on which to center
-                float[] magnArray = new float[CACHE_TIMESTAMPS];
-                for (int i = 0; i < CACHE_TIMESTAMPS; i++) {
-                    magnArray[i] = (float) (Math.pow(accelArray[i][0],2) + (Math.pow(accelArray[i][1],2)) + (Math.pow(accelArray[i][2],2)));
-                }
-                int indexMagnMax = Utils.argMax(magnArray, HALF_WINDOW, CACHE_TIMESTAMPS-HALF_WINDOW-1);
-
                 // fill a flatten array with the data for analysis
-                float[] flattenArray = new float[ANALYSIS_TIMESTAMPS * 3];
+                float[] flattenArray = new float[CACHE_TIMESTAMPS * 3];
 
-                for (int i = indexMagnMax - HALF_WINDOW; i < indexMagnMax + HALF_WINDOW + 1; i++) {
+                for (int i = 0; i < CACHE_TIMESTAMPS; i++) {
                     for (int j = 0; j < 3; j++) {
-                        flattenArray[j * ANALYSIS_TIMESTAMPS + (i - (indexMagnMax - HALF_WINDOW))] = accelArray[i][j];
+                        flattenArray[j * CACHE_TIMESTAMPS + i] = cacheAccel[i][j];
                     }
                 }
+
+                // DEBUG
+                Log.d("flattenArray", Arrays.toString(flattenArray));
 
                 //TODO: filter signal before and on more timestamps because filter doesn't work for the first timestamps
 
                 // filter signal in the flatten array (3 times, one for each axis)
                 double[] flattenArrayX = Utils.toDoubleArray(Arrays.copyOfRange(flattenArray,
-                        0, ANALYSIS_TIMESTAMPS));
+                        0, CACHE_TIMESTAMPS));
                 double[] flattenArrayY = Utils.toDoubleArray(Arrays.copyOfRange(flattenArray,
-                        ANALYSIS_TIMESTAMPS, 2*ANALYSIS_TIMESTAMPS));
+                        CACHE_TIMESTAMPS, 2*CACHE_TIMESTAMPS));
                 double[] flattenArrayZ = Utils.toDoubleArray(Arrays.copyOfRange(flattenArray,
-                        2*ANALYSIS_TIMESTAMPS, 3*ANALYSIS_TIMESTAMPS));
+                        2*CACHE_TIMESTAMPS, 3*CACHE_TIMESTAMPS));
 
                 int Fs = 50; //Sampling Frequency in Hz
                 int order = 3; //order of the filter
@@ -128,9 +118,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 double[] resultY = fltY.lowPassFilter(order, cutOff); //get the result after filtering
                 Butterworth fltZ = new Butterworth(flattenArrayZ, Fs); //signal is of type double[]
                 double[] resultZ = fltZ.lowPassFilter(order, cutOff); //get the result after filtering
-
-                // DEBUG
-                Log.d("resultY", Arrays.toString(resultY));
 
                 flattenArrayX = Utils.subtractArray(flattenArrayX, resultX);
                 flattenArrayY = Utils.subtractArray(flattenArrayY, resultY);
@@ -144,11 +131,29 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 //DEBUG
                 Log.d("Acceleration", Arrays.toString(flattenArrayY));
 
+                // compute magnitudes from cache to find a window on which to center
+                float[] magnArray = new float[CACHE_TIMESTAMPS];
+                for (int i = 0; i < CACHE_TIMESTAMPS; i++) {
+                    magnArray[i] = (float) (Math.pow(flattenArray[i],2) + (Math.pow(flattenArray[CACHE_TIMESTAMPS+i],2)) + (Math.pow(flattenArray[2*CACHE_TIMESTAMPS+i],2)));
+                }
+                int indexMagnMax = Utils.argMax(magnArray, FILTER_BUFFER_SIZE+HALF_WINDOW, CACHE_TIMESTAMPS-HALF_WINDOW-1);
+
+
+                // Find index of maximum TODO:change
+                float[] flattenArrayToAnalyse = new float[ANALYSIS_TIMESTAMPS*3];
+                for (int i = indexMagnMax - HALF_WINDOW; i < indexMagnMax + HALF_WINDOW + 1; i++) {
+                    for (int j = 0; j < 3; j++) {
+                        flattenArrayToAnalyse[j * ANALYSIS_TIMESTAMPS + (i - (indexMagnMax - HALF_WINDOW))]
+                                = flattenArray[j * CACHE_TIMESTAMPS + i];
+                    }
+                }
+
+                // Pass to model for inference
                 int[] shape = new int[]{1, 151, 3};
                 Model model = Model.newInstance(getApplicationContext());
                 // Creates inputs for reference.
                 TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(shape, DataType.FLOAT32);
-                inputFeature0.loadArray(flattenArray, shape);
+                inputFeature0.loadArray(flattenArrayToAnalyse, shape);
 
                 // Runs model inference and gets result.
                 Model.Outputs outputs = model.process(inputFeature0);
@@ -162,6 +167,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 // TODO Handle the exception
             }
             timeToAnalyse = false;
+            cacheAccel = Utils.shiftLeftArray(cacheAccel, HALF_WINDOW);
+
         }
     }
 

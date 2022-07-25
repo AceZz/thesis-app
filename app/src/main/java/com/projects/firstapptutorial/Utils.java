@@ -56,4 +56,15 @@ public class Utils {
         }
         return ret;
     }
+
+    public static float[][] shiftLeftArray(float[][] arr, int shiftLength) {
+        int n = arr.length;
+        float[][] ret = new float[n][3];
+        for (int i = 0; i < n - shiftLength; i++) {
+            for (int j = 0; j < 3; j++){
+                ret[i][j] = arr[i+shiftLength][j];
+            }
+        }
+        return ret;
+    }
 }

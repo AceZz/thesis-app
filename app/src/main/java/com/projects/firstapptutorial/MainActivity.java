@@ -61,12 +61,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             @Override
             public void onClick(View view) {
-
-                    // TODO Auto-generated method stub
                     sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
                     sensorManager.registerListener(MainActivity.this,
                             sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                             20000);
+
+                    //Switch button to on/off
+                    start.setVisibility(View.GONE);
+//                    start.setText("STOP");
             }
         });
     }
@@ -139,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 int indexMagnMax = Utils.argMax(magnArray, FILTER_BUFFER_SIZE+HALF_WINDOW, CACHE_TIMESTAMPS-HALF_WINDOW-1);
 
 
-                // Find index of maximum TODO:change
+                // Find index of maximum
                 float[] flattenArrayToAnalyse = new float[ANALYSIS_TIMESTAMPS*3];
                 for (int i = indexMagnMax - HALF_WINDOW; i < indexMagnMax + HALF_WINDOW + 1; i++) {
                     for (int j = 0; j < 3; j++) {

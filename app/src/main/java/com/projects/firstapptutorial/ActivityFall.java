@@ -1,12 +1,13 @@
 package com.projects.firstapptutorial;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
-import android.widget.Toolbar;
+import androidx.appcompat.widget.Toolbar;
 
 import java.util.Properties;
 
@@ -30,16 +31,16 @@ public class ActivityFall extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fall);
 
-//        // my_child_toolbar is defined in the layout file
-//        Toolbar myChildToolbar =
-//                (Toolbar) findViewById(R.id.my_child_toolbar);
-//        setSupportActionBar(myChildToolbar);
-//
-//        // Get a support ActionBar corresponding to this toolbar
-//        ActionBar ab = getSupportActionBar();
-//
-//        // Enable the Up button
-//        ab.setDisplayHomeAsUpEnabled(true);
+        // my_child_toolbar is defined in the layout file
+        Toolbar myChildToolbar =
+                (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(myChildToolbar);
+
+        // Get a support ActionBar corresponding to this toolbar
+        ActionBar ab = getSupportActionBar();
+
+        // Enable the Up button
+        ab.setDisplayHomeAsUpEnabled(true);
 
         String stringSenderEmail = "fall.live.alerts@gmail.com";
         String stringReceiverEmail = "care.live.provider@gmail.com";

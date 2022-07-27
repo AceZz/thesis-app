@@ -2,6 +2,8 @@ package com.projects.firstapptutorial;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -21,6 +23,7 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
+import java.text.DecimalFormat;
 
 import com.github.psambit9791.jdsp.filter.Butterworth;
 
@@ -48,9 +51,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     final int HALF_WINDOW = 75;
     final int CACHE_TIMESTAMPS = 8*HALF_WINDOW;
     final int FILTER_BUFFER_SIZE = 4*HALF_WINDOW;
+    final double DETECTION_THRESHOLD = 0.9;
 
     boolean timeToAnalyse = false;
     float[][] cacheAccel = new float[CACHE_TIMESTAMPS][3];
+
+    private static final DecimalFormat df = new DecimalFormat("0.000");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,11 +90,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onSensorChanged(SensorEvent event) {
         //here the event.values will provide the data
         //index 0 for x axis, 1 for y axis, 2 for z axis
-        textView.setText(cacheAccel[0][0]+"\n"+ cacheAccel[0][1]+"\n"+ cacheAccel[0][2]);
+        textView.setText(df.format(cacheAccel[7*HALF_WINDOW][0])+"\n"
+                + df.format(cacheAccel[7*HALF_WINDOW][1])+"\n"
+                + df.format(cacheAccel[7*HALF_WINDOW][2]));
         for (int j=0; j<3; j++) {
             cacheAccel[currTimestamp][j] = event.values[j];
         }
@@ -100,6 +109,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         if (timeToAnalyse) {
             try {
+
+                //TODO: try to normalize to see if it helps with false positives
+
                 // fill a flatten array with the data for analysis
                 float[] flattenArray = new float[CACHE_TIMESTAMPS * 3];
 
@@ -108,11 +120,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         flattenArray[j * CACHE_TIMESTAMPS + i] = cacheAccel[i][j];
                     }
                 }
-
-                // DEBUG
-                Log.d("flattenArray", Arrays.toString(flattenArray));
-
-                //TODO: filter signal before and on more timestamps because filter doesn't work for the first timestamps
 
                 // filter signal in the flatten array (3 times, one for each axis)
                 double[] flattenArrayX = Utils.toDoubleArray(Arrays.copyOfRange(flattenArray,
@@ -140,9 +147,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 filteredFlattenArray = Utils.concatenate(flattenArrayX, flattenArrayY);
                 filteredFlattenArray = Utils.concatenate(filteredFlattenArray, flattenArrayZ);
                 flattenArray = Utils.toFloatArray(filteredFlattenArray);
-
-                //DEBUG
-                Log.d("Acceleration", Arrays.toString(flattenArrayY));
 
                 // compute magnitudes from cache to find a window on which to center
                 float[] magnArray = new float[CACHE_TIMESTAMPS];
@@ -175,7 +179,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 // Releases model resources if no longer used.
                 model.close();
 
-                textDetect.setText(outputFeature0.getFloatArray()[0] + "\n" + outputFeature0.getFloatArray()[1]);
+                float fallProbability = outputFeature0.getFloatArray()[1];
+
+                textDetect.setText("fall probability: \n" + df.format(fallProbability));
+
+                if (fallProbability > DETECTION_THRESHOLD) {
+                    Intent myIntent = new Intent(this, ActivityFall.class);
+                    startActivity(myIntent);
+                }
+
             } catch (IOException e) {
                 // TODO Handle the exception
             }
@@ -190,50 +202,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void buttonSendEmail(View view) throws AddressException {
-
-        try {
-            String stringSenderEmail = "fall.live.alerts@gmail.com";
-            String stringReceiverEmail = "care.live.provider@gmail.com";
-            String stringPasswordSenderEmail = "xqhzlopsyxxqdzxo";
-
-            String stringHost = "smtp.gmail.com";
-
-            Properties properties = System.getProperties();
-
-            properties.put("mail.smtp.host",stringHost);
-            properties.put("mail.smtp.port", "465");
-            properties.put("mail.smtp.ssl.enable", "true");
-            properties.put("mail.smtp.auth", "true");
-
-            javax.mail.Session session = Session.getInstance(properties, new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(stringSenderEmail, stringPasswordSenderEmail);
-                }
-            });
-
-            MimeMessage mimeMessage = new MimeMessage(session);
-            mimeMessage.addRecipient(Message.RecipientType.TO, new InternetAddress(stringReceiverEmail));
-            mimeMessage.setSubject("Subject: Fall detection alert");
-            mimeMessage.setText("A fall of the Android device wearer has been detected. An emergency care is needed. \n\n Fall app");
-
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Transport.send(mimeMessage);
-                    } catch (MessagingException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            thread.start();
-
-        } catch (AddressException e) {
-            e.printStackTrace();
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        }
+        Intent myIntent = new Intent(this, ActivityFall.class);
+        startActivity(myIntent);
     }
 
 }

@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     final int HALF_WINDOW = 75;
     final int CACHE_TIMESTAMPS = 8*HALF_WINDOW;
     final int FILTER_BUFFER_SIZE = 4*HALF_WINDOW;
-    final double DETECTION_THRESHOLD = 0.9;
+    final double DETECTION_THRESHOLD = 0.99;
 
     boolean timeToAnalyse = false;
     float[][] cacheAccel = new float[CACHE_TIMESTAMPS][3];
@@ -67,15 +67,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         start = (Button) findViewById(R.id.button);
         textDetect = (TextView) findViewById(R.id.textView2);
 
-//        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-//        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-//        sensorManager.registerListener( MainActivity.this, sensor, sensorManager.SENSOR_DELAY_NORMAL);
-
-
-
 
         start.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View view) {
                     sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -86,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     //Switch button to on/off
                     start.setVisibility(View.GONE);
 //                    start.setText("STOP");
+                    textView.setText("The detection is initializing...");
             }
         });
     }
@@ -95,9 +89,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
         //here the event.values will provide the data
         //index 0 for x axis, 1 for y axis, 2 for z axis
-        textView.setText(df.format(cacheAccel[7*HALF_WINDOW][0])+"\n"
-                + df.format(cacheAccel[7*HALF_WINDOW][1])+"\n"
-                + df.format(cacheAccel[7*HALF_WINDOW][2]));
         for (int j=0; j<3; j++) {
             cacheAccel[currTimestamp][j] = event.values[j];
         }
@@ -109,6 +100,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         if (timeToAnalyse) {
             try {
+                // Display latest acceleration values
+                textView.setText("X: "+ df.format(cacheAccel[8*HALF_WINDOW-1][0])+"\n"
+                        + "Y: "+ df.format(cacheAccel[8*HALF_WINDOW-1][1])+"\n"
+                        + "Z: "+ df.format(cacheAccel[8*HALF_WINDOW-1][2]));
 
                 //TODO: try to normalize to see if it helps with false positives
 

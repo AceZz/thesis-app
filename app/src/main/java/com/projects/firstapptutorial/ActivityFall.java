@@ -5,7 +5,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.widget.TextView;
 import androidx.appcompat.widget.Toolbar;
 
@@ -49,8 +54,18 @@ public class ActivityFall extends AppCompatActivity {
         String stringHost = "smtp.gmail.com";
 
         textViewEmailSent = findViewById(R.id.textViewEmailSent);
-        textViewEmailSent.setText("An email has been sent to " + stringReceiverEmail
-                + " to provide emergency care.");
+        String textEmailSent = "An email has been sent to: \n" + stringReceiverEmail
+                + "\n" + "to provide emergency care.";
+
+        SpannableString spannableString = new SpannableString(textEmailSent);
+
+        // It is used to set foreground color.
+        ForegroundColorSpan blue = new ForegroundColorSpan(Color.BLUE);
+
+        // It is used to set the span to the string
+        spannableString.setSpan(blue,
+                28,56, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        textViewEmailSent.setText(spannableString);
 
         try {
             Properties properties = System.getProperties();

@@ -27,7 +27,8 @@
         <activity
             android:name=".ActivityFall"
             android:parentActivityName="com.projects.firstapptutorial.MainActivity"
-            android:exported="false">
+            android:exported="false"
+            android:launchMode = "singleTop">
         <!-- Parent activity meta-data to support 4.0 and lower -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

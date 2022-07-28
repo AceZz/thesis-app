@@ -201,9 +201,4 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onAccuracyChanged(Sensor sensor, int i) {
     }
 
-    public void buttonSendEmail(View view) throws AddressException {
-        Intent myIntent = new Intent(this, ActivityFall.class);
-        startActivity(myIntent);
-    }
-
 }

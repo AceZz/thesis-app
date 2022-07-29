@@ -1,4 +1,4 @@
-package com.projects.firstapptutorial;
+package com.projects.fallapp;
 
 public class Utils {
     public static int argMax(float[] a, int start, int end) {

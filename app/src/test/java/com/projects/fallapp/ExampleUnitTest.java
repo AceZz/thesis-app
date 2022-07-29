@@ -1,4 +1,4 @@
-package com.projects.firstapptutorial;
+package com.projects.fallapp;
 
 import org.junit.Test;
 

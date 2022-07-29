@@ -1,4 +1,4 @@
-package com.projects.firstapptutorial;
+package com.projects.fallapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -10,32 +10,20 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.projects.firstapptutorial.ml.Model;
+import com.projects.fallapp.ml.Model;
 
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Properties;
 import java.text.DecimalFormat;
 
 import com.github.psambit9791.jdsp.filter.Butterworth;
-
-import javax.mail.Authenticator;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 

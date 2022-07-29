@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.projects.firstapptutorial">
+    package="com.projects.fallapp">
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
@@ -16,7 +16,7 @@
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name="com.projects.fallapp.MainActivity"
             android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -26,15 +26,15 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ActivityFall"
-            android:parentActivityName="com.projects.firstapptutorial.MainActivity"
+            android:name="com.projects.fallapp.ActivityFall"
+            android:parentActivityName="com.projects.fallapp.MainActivity"
             android:exported="false"
             android:launchMode = "singleTop"
             android:screenOrientation="portrait">
         <!-- Parent activity meta-data to support 4.0 and lower -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.projects.firstapptutorial.MainActivity" />
+                android:value="com.projects.fallapp.MainActivity" />
         </activity>
     </application>
 

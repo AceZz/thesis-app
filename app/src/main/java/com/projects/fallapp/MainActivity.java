@@ -10,6 +10,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -22,6 +23,7 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 import java.io.IOException;
 import java.util.Arrays;
 import java.text.DecimalFormat;
+import java.util.List;
 
 import com.github.psambit9791.jdsp.filter.Butterworth;
 
@@ -55,7 +57,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         start = (Button) findViewById(R.id.button);
         textDetect = (TextView) findViewById(R.id.textView2);
 
-
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -68,6 +69,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     start.setVisibility(View.GONE);
 //                    start.setText("STOP");
                     textView.setText("The detection is initializing...");
+
+                    //Write accelerometer name in Logs
+                    SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+                    List<Sensor> list = sm.getSensorList(Sensor.TYPE_ALL);
+
+                    for(Sensor s : list) {
+                        Log.d("SENSORS", s.getName());
+                    }
             }
         });
     }

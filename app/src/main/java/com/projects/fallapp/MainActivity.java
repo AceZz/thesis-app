@@ -23,6 +23,7 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 import java.io.IOException;
 import java.util.Arrays;
 import java.text.DecimalFormat;
+import java.util.Collections;
 import java.util.List;
 
 import com.github.psambit9791.jdsp.filter.Butterworth;
@@ -156,6 +157,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                                 = flattenArray[j * CACHE_TIMESTAMPS + i];
                     }
                 }
+
+                // Scale to [0,1]
+                flattenArrayToAnalyse = Utils.normalizeFlattenArray(flattenArrayToAnalyse, ANALYSIS_TIMESTAMPS);
 
                 // Pass to model for inference
                 int[] shape = new int[]{1, 151, 3};

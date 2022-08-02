@@ -67,4 +67,26 @@ public class Utils {
         }
         return ret;
     }
+
+    public static float[] normalizeFlattenArray(float[] arr, int streamLength) {
+        int n = arr.length;
+        assert 3 * streamLength == n;
+        float[] ret = new float[n];
+        for (int j = 0; j < 3; j++){
+            float max = arr[j*streamLength];
+            float min = arr[j*streamLength];
+            for (int i = 0; i < streamLength; i++) {
+                if (arr[j*streamLength+i] > max) {
+                    max = arr[j*streamLength+i];
+                }
+                if (arr[j*streamLength+i] < min) {
+                    min = arr[j*streamLength+i];
+                }
+            }
+            for (int i = 0; i < streamLength; i++) {
+                ret[j*streamLength+i] = (float) ((arr[j*streamLength+i] - min) / (1e-5 + max - min));
+            }
+        }
+        return ret;
+    }
 }

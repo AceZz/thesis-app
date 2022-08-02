@@ -4,7 +4,7 @@ This is the code of the app developed for the master thesis of Tristan Stampfler
 
 ## Description
 
-The code is meant to be used with Android Studio and compiles into an Android App
+The code is meant to be used with Android Studio and compiles into an Android App that uses the phone's accelerometer for automated fall detection.
 
 ## Getting Started
 
